@@ -1,6 +1,6 @@
-export default function ActAwaken({ website, onWebsiteChange, onAwaken, loading }) {
+export default function ActDiscover({ website, onWebsiteChange, onCompile, loading }) {
   return (
-    <div className="act act-awaken">
+    <div className="act act-discover-entry">
       <div className="act-hero">
         <p className="act-eyebrow">FORGEOS</p>
         <h2 className="act-title">No organization loaded.</h2>
@@ -15,14 +15,14 @@ export default function ActAwaken({ website, onWebsiteChange, onAwaken, loading 
           value={website}
           onChange={(e) => onWebsiteChange(e.target.value)}
           placeholder="acme.com"
-          onKeyDown={(e) => e.key === "Enter" && onAwaken()}
+          onKeyDown={(e) => e.key === "Enter" && onCompile()}
         />
-        <button className="awaken-btn" onClick={onAwaken} disabled={loading || !website.trim()}>
-          {loading ? "Awakening…" : "Awaken Organization"}
+        <button className="awaken-btn compile-primary" onClick={onCompile} disabled={loading || !website.trim()}>
+          {loading ? "Compiling…" : "Compile Organization"}
         </button>
       </div>
 
-      <p className="act-footnote">Paste a domain. ForgeOS discovers, compiles, then operates.</p>
+      <p className="act-footnote">Paste a domain. ForgeOS discovers sources, compiles a genome, then operates.</p>
     </div>
   );
 }

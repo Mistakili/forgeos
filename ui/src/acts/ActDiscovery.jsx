@@ -5,7 +5,7 @@ const CONNECT_STEPS = ["Website", "Social", "Policies", "Knowledge Sources"];
 export default function ActDiscovery({ stepsDone, radar, radarIndex }) {
   return (
     <div className="act act-discovery">
-      <p className="act-eyebrow">Act II — Discovery</p>
+      <p className="act-eyebrow">Discover</p>
       <h2 className="act-title-sm">Scanning organization</h2>
 
       <ul className="connect-steps">

@@ -10,7 +10,7 @@ export default function ActAssembly({ roles, litIndex }) {
 
   return (
     <div className="act act-assembly">
-      <p className="act-eyebrow">Act IV — Assembly</p>
+      <p className="act-eyebrow">Assemble</p>
       <h2 className="act-title-sm">Workforce determined by genome</h2>
 
       <div className="assembly-room">

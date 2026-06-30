@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
 const BOOT_LINES = [
-  "Initializing Runtime…",
-  "Loading Compiler…",
+  "Initializing Compiler…",
+  "Resolving Connectors…",
   "Loading Reasoning Engine…",
-  "Loading Connectors…",
-  "Runtime Ready.",
+  "Building Runtime…",
+  "Compiler Ready.",
 ];
 
 export default function BootSequence({ onComplete }) {

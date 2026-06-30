@@ -40,6 +40,19 @@
   gap: 0.25rem;
 }
 
+.rail-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.rail-hint {
+  font-size: 0.65rem;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 .rail-item {
   display: flex;
   align-items: center;
@@ -190,6 +203,10 @@
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.15);
+}
+
+.compile-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
 }
 
 .awaken-btn {
@@ -758,4 +775,77 @@
     flex-wrap: wrap;
   }
   .rail-worldview { display: none; }
+}
+
+.act-insights {
+  width: min(580px, 100%);
+  text-align: left;
+}
+
+.insights-pause {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+.aha-panel {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.aha-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  opacity: 0;
+  animation: fadeUp 0.45s ease forwards;
+}
+
+.aha-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  min-width: 1.5rem;
+}
+
+.aha-item strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.aha-item p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.act-execute .execute-status {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--success);
+  margin-bottom: 1rem;
+}
+
+.execute-replay h3 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 1rem 0 0.5rem;
+  text-align: left;
+}
+
+.replay-timeline.calm .replay-item {
+  animation: none;
+  opacity: 1;
+}
+
+.ide-header.calm,
+.ide-footer.calm {
+  background: transparent;
 }

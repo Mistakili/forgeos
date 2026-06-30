@@ -15,6 +15,7 @@ from kernel.event_store import EventStore
 from reasoning.client import ReasoningClient
 from runtime.coverage import SOURCE_CATALOG, build_coverage
 from runtime.discovery_radar import build_department_radar
+from runtime.insights import build_insights
 from runtime.trace import build_board_trace, format_replay_timeline
 
 
@@ -95,12 +96,18 @@ class ForgeController:
             },
         )
 
+        radar = build_department_radar(sources, compiled)
+        insights = await build_insights(
+            compiled, coverage, radar, self.reasoning
+        )
+
         result = {
             "session_id": session_id,
             "compiled_at": datetime.now(timezone.utc).isoformat(),
             "sources": sources,
             "coverage": coverage,
-            "radar": build_department_radar(sources, compiled),
+            "radar": radar,
+            "insights": insights,
             "pipeline": {
                 "evidence_count": len(compiled["evidence"]),
                 "facts_count": len(compiled["facts"]),

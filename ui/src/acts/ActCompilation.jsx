@@ -21,7 +21,7 @@ export default function ActCompilation({ pipeline, stageIndex }) {
 
   return (
     <div className="act act-compilation">
-      <p className="act-eyebrow">Act III — Compilation</p>
+      <p className="act-eyebrow">Compile</p>
       <h2 className="act-title-sm">Organization Compiler</h2>
 
       <div className="compiler-log">
