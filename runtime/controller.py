@@ -11,15 +11,15 @@ from connectors.social import SocialConnector
 from connectors.website import WebsiteConnector
 from kernel.artifact_store import ArtifactStore
 from kernel.event_store import EventStore
-from reasoning.qwen import QwenClient
+from reasoning.client import ReasoningClient
 
 
 class ForgeController:
     """Orchestrates discovery, genome compilation, and mission execution."""
 
     def __init__(self) -> None:
-        self.qwen = QwenClient()
-        self.compiler = GenomeCompiler(self.qwen)
+        self.reasoning = ReasoningClient()
+        self.compiler = GenomeCompiler(self.reasoning)
         self.events = EventStore()
         self.artifacts = ArtifactStore()
         self._missions: dict[str, dict[str, Any]] = {}
@@ -97,7 +97,8 @@ class ForgeController:
         genome = compiled["genome"]
         workforce = self._assemble_workforce(genome)
 
-        board_decision = await self.qwen.deliberate(objective, genome)
+        board_decision = await self.reasoning.deliberate(objective, genome)
+        provider = board_decision.pop("_provider", None)
         self.events.append(
             "board.decided",
             {"mission_id": mission_id, "decision": board_decision.get("decision")},
@@ -117,7 +118,8 @@ class ForgeController:
             "genome": genome,
             "workforce": workforce,
             "board_decision": board_decision,
-            "reasoning_mode": "qwen-live" if self.qwen.is_live else "mock",
+            "reasoning_mode": "live" if self.reasoning.is_live else "mock",
+            "reasoning_provider": provider,
             "status": "OPERATIONAL",
             "time_saved_hours": time_saved,
         }
@@ -126,10 +128,14 @@ class ForgeController:
         self.events.append("mission.completed", {"mission_id": mission_id})
         return result
 
+    def get_mission(self, mission_id: str) -> dict[str, Any] | None:
+        """Return mission without console output."""
+        return self._missions.get(mission_id) or self.artifacts.get(mission_id)
+
     def replay_mission(self, mission_id: str) -> dict[str, Any] | None:
         """Replay a completed mission from the event store."""
         events = self.events.replay(mission_id)
-        mission = self._missions.get(mission_id) or self.artifacts.get(mission_id)
+        mission = self.get_mission(mission_id)
         if mission:
             print(f"  Replaying {mission_id}: {mission['objective']}")
             print(f"  Status: {mission['status']}")
@@ -139,9 +145,13 @@ class ForgeController:
         return mission
 
     def get_status(self) -> dict[str, Any]:
+        configured = [
+            p["name"] for p in self.reasoning.list_providers() if p["configured"]
+        ]
         return {
             "missions": len(self._missions),
             "artifacts": self.artifacts.list_keys(),
             "events": len(self.events.list_events()),
-            "qwen_live": self.qwen.is_live,
+            "reasoning_live": self.reasoning.is_live,
+            "providers_configured": configured,
         }

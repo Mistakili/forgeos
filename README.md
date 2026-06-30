@@ -82,16 +82,45 @@ python demo.py
 
 You'll see the full flow: boot sequence → genome compilation → workforce assembly → board deliberation → executive minutes.
 
-### Enable live reasoning (optional)
+### Production deploy (one command)
 
 ```bash
 cp .env.example .env
-# Set DASHSCOPE_API_KEY — get one at https://dashscope.console.aliyun.com/
+# Add any API key below (OpenAI, Anthropic, Qwen, etc.)
+docker compose up --build -d
 ```
 
-Without a key, ForgeOS runs in mock reasoning mode. The demo works either way.
+Open **http://localhost:8000** — API + dashboard, single port.
 
-### Web dashboard (optional)
+### Bring Your Own Model (BYOM)
+
+ForgeOS is **model-agnostic**. The model is below the runtime, not the product.
+
+```bash
+cp .env.example .env
+# Add ANY one of these:
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+DASHSCOPE_API_KEY=...        # Qwen
+GOOGLE_API_KEY=...           # Gemini
+GROQ_API_KEY=...
+OPENROUTER_API_KEY=...
+OLLAMA_ENABLED=true            # Local/private
+```
+
+The **Model Router** picks the best configured provider per task:
+
+| Task | Preferred models |
+|------|-----------------|
+| Claim inference | Fast/cheap (GPT-4o-mini, Qwen, Groq) |
+| Board deliberation | High-quality (Claude, GPT-4) |
+| Executive summary | Fast/cheap |
+
+Pin a provider: `FORGE_DEFAULT_PROVIDER=anthropic`
+
+Without any key, ForgeOS runs in **mock mode** — the full pipeline works, reasoning uses deterministic fallbacks.
+
+### Development UI (hot reload)
 
 ```bash
 # Terminal 1
@@ -102,6 +131,16 @@ cd ui && npm install && npm run dev
 ```
 
 Open http://localhost:5173
+
+### Cost model
+
+Compile once, reuse thousands of times:
+
+- **Initial compilation**: ~$5–$50 AI cost for a typical SMB
+- **Incremental updates**: cents per new document
+- **Per mission**: often pennies (queries genome, not raw docs)
+
+See [ROADMAP.md](ROADMAP.md) for the full cost architecture.
 
 ---
 
@@ -118,6 +157,7 @@ Open http://localhost:5173
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | System status |
+| GET | `/api/models` | Configured AI providers (BYOM) |
 | POST | `/api/discover` | Collect evidence from sources |
 | POST | `/api/compile` | Run the compiler pipeline |
 | POST | `/api/mission` | Full mission flow |

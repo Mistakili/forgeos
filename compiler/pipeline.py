@@ -8,14 +8,14 @@ from compiler.claims import Claim
 from compiler.evidence import Evidence
 from compiler.facts import Fact
 from compiler.genome import OrganizationGenome
-from reasoning.qwen import QwenClient
+from reasoning.client import ReasoningClient
 
 
 class GenomeCompiler:
     """Evidence → Facts → Claims → Genome pipeline."""
 
-    def __init__(self, qwen: QwenClient | None = None) -> None:
-        self.qwen = qwen or QwenClient()
+    def __init__(self, reasoning: ReasoningClient | None = None) -> None:
+        self.reasoning = reasoning or ReasoningClient()
 
     async def compile(self, evidence_list: list[Evidence]) -> dict[str, Any]:
         facts = self._extract_facts(evidence_list)
@@ -117,7 +117,9 @@ class GenomeCompiler:
             '"reasoning": "..."}'
         )
         fallback = self._fallback_claims(facts)
-        result = await self.qwen.complete_json(prompt, fallback=fallback)
+        result = await self.reasoning.complete_json(
+            prompt, fallback=fallback, task="claim_inference"
+        )
         if not result:
             return fallback
         if isinstance(result, list) and result and isinstance(result[0], Claim):

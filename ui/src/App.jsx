@@ -64,8 +64,10 @@ export default function App() {
           </div>
         </div>
         {result && (
-          <span className={`badge ${result.reasoning_mode === "qwen-live" ? "live" : "mock"}`}>
-            {result.reasoning_mode === "qwen-live" ? "Qwen Live" : "Mock Reasoning"}
+          <span className={`badge ${result.reasoning_mode === "live" ? "live" : "mock"}`}>
+            {result.reasoning_mode === "live"
+              ? `Live${result.reasoning_provider ? ` · ${result.reasoning_provider}` : ""}`
+              : "Mock — add an API key"}
           </span>
         )}
       </header>

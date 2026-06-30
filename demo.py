@@ -47,7 +47,10 @@ async def main():
 
     console.print("\n[bold]Phase 5:[/] Executive Minutes")
     console.print(f"Mission completed. Time saved: {result['time_saved_hours']} hours")
-    console.print(f"Reasoning mode: {result['reasoning_mode']}")
+    mode = result["reasoning_mode"]
+    provider = result.get("reasoning_provider")
+    label = f"{mode}" + (f" ({provider})" if provider else "")
+    console.print(f"Reasoning: {label}")
     console.print(f"Organization Status: [green]{result['status']}[/]")
 
     console.print("\n[bold]Pipeline trace:[/]")

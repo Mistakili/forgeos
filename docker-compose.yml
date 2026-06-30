@@ -1,0 +1,11 @@
+services:
+  forgeos:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      FORGE_ENV: production
+      FORGE_CORS_ORIGINS: "*"
+    restart: unless-stopped
