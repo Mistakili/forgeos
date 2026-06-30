@@ -99,8 +99,13 @@ class ModelRouter:
             '{"decision": "...", "rationale": "...", "next_steps": ["..."]}'
         )
         fallback = {
-            "decision": "Scoped MVP approved",
+            "decision": "Approve campaign",
             "rationale": "Genome confidence supports a focused launch campaign.",
+            "reasoning_points": [
+                "Marketing alignment confirmed against genome voice profile",
+                "Compliance risk assessed as low pending policy connector",
+                "Budget scope fits workforce assembly plan",
+            ],
             "next_steps": [
                 "Draft listing copy aligned to brand voice",
                 "Schedule social campaign across active channels",

@@ -32,3 +32,10 @@ class EventStore:
 
     def replay(self, mission_id: str) -> list[dict[str, Any]]:
         return self.list_events(mission_id)
+
+    def replay_session(self, session_id: str) -> list[dict[str, Any]]:
+        return [
+            e
+            for e in self._events
+            if e.get("payload", {}).get("session_id") == session_id
+        ]

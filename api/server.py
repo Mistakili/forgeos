@@ -53,6 +53,8 @@ class SourceInput(BaseModel):
 class MissionRequest(BaseModel):
     objective: str = "Launch luxury listing campaign"
     sources: list[SourceInput] = Field(default_factory=list)
+    session_id: str | None = None
+    use_compiled: bool = True
 
 
 class DiscoverRequest(BaseModel):
@@ -87,18 +89,32 @@ async def discover(req: DiscoverRequest) -> dict[str, Any]:
     return {"evidence": evidence}
 
 
+@app.get("/api/sources")
+async def list_sources() -> dict[str, Any]:
+    return {"catalog": controller.get_source_catalog()}
+
+
 @app.post("/api/compile")
 async def compile_genome(req: DiscoverRequest) -> dict[str, Any]:
     sources = [s.model_dump() for s in req.sources] or None
-    compiled = await controller.compile_genome(sources)
-    return compiled
+    return await controller.compile_organization(sources)
 
 
 @app.post("/api/mission")
 async def start_mission(req: MissionRequest) -> dict[str, Any]:
-    sources = [s.model_dump() for s in req.sources] or None
-    result = await controller.start_mission(req.objective, sources)
-    return result
+    sources = [s.model_dump() for s in req.sources] if req.sources else None
+    compiled = controller.artifacts.get("latest_genome")
+    if not compiled and not sources and not req.session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Compile organization first, or provide sources.",
+        )
+    return await controller.start_mission(
+        req.objective,
+        sources=sources,
+        session_id=req.session_id,
+        use_compiled=req.use_compiled,
+    )
 
 
 @app.get("/api/missions/{mission_id}")
