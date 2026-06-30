@@ -286,9 +286,28 @@
   font-size: 0.95rem;
 }
 
+.pipe-stage-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .pipe-stage {
   font-weight: 600;
+  color: var(--muted);
+  opacity: 0.45;
+  transition: opacity 0.4s ease, color 0.4s ease, transform 0.4s ease;
+}
+
+.pipe-stage.lit {
   color: var(--text);
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.pipe-arrow.lit {
+  color: var(--accent);
+  opacity: 1;
 }
 
 .pipe-stage em {
@@ -535,4 +554,585 @@
   color: var(--muted);
   font-size: 0.8rem;
   margin-top: 0.1rem;
+}
+
+/* ── Layer 2 & 3: Alive + Cinematic ─────────────────────────── */
+
+.app {
+  position: relative;
+}
+
+.app-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79, 140, 255, 0.08), transparent);
+  z-index: 0;
+}
+
+.app > *:not(.app-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+@keyframes barFill {
+  from { width: 0; }
+}
+
+@keyframes nodePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 140, 255, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(79, 140, 255, 0.25); }
+}
+
+@keyframes spherePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes replayReveal {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fade-in { animation: fadeIn 0.5s ease both; }
+.fade-up { animation: fadeUp 0.45s ease both; }
+.pulse-slow { animation: pulseSlow 3s ease-in-out infinite; }
+.results-reveal { animation: fadeIn 0.4s ease both; }
+
+.presence-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 0.35rem;
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+
+/* Boot sequence */
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease;
+}
+
+.boot-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-content {
+  width: min(420px, 90vw);
+  text-align: left;
+}
+
+.boot-logo {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: var(--text);
+  margin-bottom: 2rem;
+  font-family: var(--mono);
+}
+
+.boot-lines {
+  min-height: 140px;
+  margin-bottom: 1.5rem;
+}
+
+.boot-line {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease, color 0.3s ease;
+  padding: 0.2rem 0;
+}
+
+.boot-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.boot-line.current {
+  color: var(--accent);
+}
+
+.boot-cursor {
+  display: inline-block;
+  width: 1rem;
+  color: var(--accent);
+}
+
+.boot-bar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.boot-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transition: width 0.35s ease;
+}
+
+/* Progress panels */
+.progress-panel {
+  padding: 0.5rem 0 1rem;
+  animation: fadeIn 0.35s ease both;
+}
+
+.progress-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.progress-steps {
+  list-style: none;
+}
+
+.progress-steps.compact .progress-step {
+  font-size: 0.82rem;
+  padding: 0.3rem 0;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+  transition: color 0.25s ease;
+}
+
+.progress-step.done { color: var(--text); }
+.progress-step.active { color: var(--accent); }
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.progress-step.done .progress-dot { background: var(--success); }
+.progress-step.active .progress-dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.progress-check {
+  margin-left: auto;
+  color: var(--success);
+  font-size: 0.8rem;
+}
+
+.progress-pulse {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulseDot 1s ease-in-out infinite;
+}
+
+/* Board avatars during mission */
+.board-avatars {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.board-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  transition: color 0.3s ease;
+}
+
+.board-avatar.speaking {
+  color: var(--accent);
+}
+
+.board-avatar.speaking .avatar-ring {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(79, 140, 255, 0.35);
+  animation: pulseDot 1.2s ease-in-out infinite;
+}
+
+.board-avatar.done .avatar-ring {
+  border-color: var(--success);
+}
+
+.avatar-ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Org health sphere */
+.health-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .health-row { grid-template-columns: 1fr; }
+}
+
+.org-health {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.org-sphere-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+
+.org-sphere {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    rgba(79, 140, 255, 0.5),
+    rgba(61, 214, 140, 0.25) 50%,
+    rgba(10, 12, 16, 0.8) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spherePulse 4s ease-in-out infinite;
+  border: 1px solid rgba(79, 140, 255, 0.3);
+}
+
+.org-sphere-core {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.org-sphere-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(79, 140, 255, 0.15);
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+.org-health-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.org-health-status {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.org-health-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.coverage-block.compact {
+  margin-bottom: 0;
+}
+
+/* Genome bars */
+.genome-viz { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.genome-trait {
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+
+.genome-viz.animate-in .genome-trait { opacity: 1; }
+
+.trait-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.trait-header span:first-child {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+}
+
+.trait-value {
+  color: var(--text);
+  font-size: 0.85rem;
+  max-width: 60%;
+  text-align: right;
+}
+
+.trait-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.trait-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: barFill 1s ease forwards;
+}
+
+/* Evidence graph */
+.evidence-graph {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.3s forwards;
+}
+
+.graph-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.graph-chain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.graph-node {
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.graph-node-genome {
+  border-color: rgba(61, 214, 140, 0.4);
+  background: rgba(61, 214, 140, 0.08);
+}
+
+.pulse-node {
+  animation: nodePulse 2.5s ease-in-out infinite;
+}
+
+.graph-node-type {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.graph-node-name {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-top: 0.15rem;
+}
+
+.graph-edge {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Board meeting chamber */
+.board-meeting {
+  margin-bottom: 1rem;
+}
+
+.board-chamber {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 1.25rem;
+}
+
+.board-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+}
+
+.board-center-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.board-member {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.member-orb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent-dim));
+  opacity: 0.7;
+}
+
+.board-meeting.resolved .member-orb {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(79, 140, 255, 0.4);
+}
+
+.board-resolution {
+  text-align: center;
+}
+
+.resolution-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.resolution-text {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.65rem;
+}
+
+.resolution-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+
+.resolution-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), #2a9d5c);
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-meeting.resolved .resolution-bar-fill {
+  width: var(--conf, 90%) !important;
+}
+
+.resolution-conf {
+  font-size: 0.8rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.board-toggle {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.board-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.replay-item {
+  opacity: 0;
+  animation: replayReveal 0.4s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,4 +1,12 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import BootSequence from "./components/BootSequence";
+import BoardMeeting from "./components/BoardMeeting";
+import CompileProgress from "./components/CompileProgress";
+import EvidenceGraph from "./components/EvidenceGraph";
+import GenomeViz from "./components/GenomeViz";
+import MissionProgress from "./components/MissionProgress";
+import OrgHealth from "./components/OrgHealth";
+import PipelineTrace from "./components/PipelineTrace";
 import "./App.css";
 
 const SOURCE_FIELDS = [
@@ -21,18 +29,41 @@ function formatTime(iso) {
 }
 
 export default function App() {
-  const [step, setStep] = useState("connect"); // connect | compiled | mission
-  const [sources, setSources] = useState({
-    website: "",
-    documents: "",
-    social: "",
-  });
+  const [booted, setBooted] = useState(() => !!sessionStorage.getItem("forgeos_booted"));
+  const [step, setStep] = useState("connect");
+  const [sources, setSources] = useState({ website: "", documents: "", social: "" });
   const [objective, setObjective] = useState("Launch luxury listing campaign");
   const [compiled, setCompiled] = useState(null);
   const [mission, setMission] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [compiling, setCompiling] = useState(false);
+  const [missioning, setMissioning] = useState(false);
   const [error, setError] = useState(null);
-  const [expandedBoard, setExpandedBoard] = useState(true);
+  const [expandedBoard, setExpandedBoard] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [pipelineStage, setPipelineStage] = useState(-1);
+
+  const handleBootComplete = useCallback(() => setBooted(true), []);
+
+  useEffect(() => {
+    if (!compiled) {
+      setShowResults(false);
+      setPipelineStage(-1);
+      return;
+    }
+    setShowResults(true);
+    setPipelineStage(-1);
+    const timers = [0, 1, 2, 3, 4].map((s, i) =>
+      setTimeout(() => setPipelineStage(s), 200 + i * 280)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [compiled?.session_id]);
+
+  useEffect(() => {
+    if (mission) {
+      const t = setTimeout(() => setExpandedBoard(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [mission?.mission_id]);
 
   function buildSourcePayload() {
     const payload = [];
@@ -49,10 +80,11 @@ export default function App() {
       return;
     }
 
-    setLoading(true);
+    setCompiling(true);
     setError(null);
     setCompiled(null);
     setMission(null);
+    setShowResults(false);
 
     try {
       const res = await fetch("/api/compile", {
@@ -67,14 +99,15 @@ export default function App() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setCompiling(false);
     }
   }
 
   async function runMission() {
     if (!compiled) return;
-    setLoading(true);
+    setMissioning(true);
     setError(null);
+    setMission(null);
 
     try {
       const res = await fetch("/api/mission", {
@@ -96,7 +129,7 @@ export default function App() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setMissioning(false);
     }
   }
 
@@ -104,12 +137,19 @@ export default function App() {
   const pipeline = active?.pipeline;
   const coverage = active?.coverage || compiled?.coverage;
   const genome = active?.genome || compiled?.genome;
+  const loading = compiling || missioning;
+
+  if (!booted) {
+    return <BootSequence onComplete={handleBootComplete} />;
+  }
 
   return (
-    <div className="app">
-      <header className="header">
+    <div className={`app ${loading ? "is-busy" : ""}`}>
+      <div className="app-glow" aria-hidden />
+
+      <header className="header fade-in">
         <div className="logo">
-          <span className="logo-mark">◆</span>
+          <span className="logo-mark pulse-slow">◆</span>
           <div>
             <h1>ForgeOS</h1>
             <p>The OS that learns your organization first</p>
@@ -124,17 +164,17 @@ export default function App() {
         )}
       </header>
 
-      <nav className="flow-nav">
-        <FlowStep n={1} label="Compile" active={step === "connect"} done={!!compiled} />
+      <nav className="flow-nav fade-in">
+        <FlowStep n={1} label="Compile" active={step === "connect" || compiling} done={!!compiled} />
         <span className="flow-arrow">→</span>
-        <FlowStep n={2} label="Genome" active={step === "compiled"} done={!!compiled} />
+        <FlowStep n={2} label="Genome" active={step === "compiled" && !missioning} done={!!compiled} />
         <span className="flow-arrow">→</span>
-        <FlowStep n={3} label="Mission" active={step === "mission"} done={!!mission} />
+        <FlowStep n={3} label="Mission" active={step === "mission" || missioning} done={!!mission} />
       </nav>
 
       <main className="main">
-        <section className="panel input-panel">
-          {step === "connect" && (
+        <section className="panel input-panel fade-in">
+          {step === "connect" && !compiling && (
             <>
               <h2>Connect Organization</h2>
               <p className="panel-desc">Compile your org before running missions.</p>
@@ -151,12 +191,12 @@ export default function App() {
                 </label>
               ))}
               <button className="launch-btn compile-btn" onClick={compileOrganization} disabled={loading}>
-                {loading ? "Compiling…" : "Compile Organization"}
+                Compile Organization
               </button>
             </>
           )}
 
-          {(step === "compiled" || step === "mission") && (
+          {(step === "compiled" || step === "mission") && !compiling && (
             <>
               <h2>Mission Control</h2>
               <p className="panel-desc">Genome ready. Run a mission against it.</p>
@@ -169,9 +209,16 @@ export default function App() {
                 />
               </label>
               <button className="launch-btn" onClick={runMission} disabled={loading || !compiled}>
-                {loading ? "Running mission…" : "Start Mission"}
+                {missioning ? "Convening board…" : "Start Mission"}
               </button>
-              <button className="ghost-btn" onClick={() => { setStep("connect"); setMission(null); }}>
+              <button
+                className="ghost-btn"
+                onClick={() => {
+                  setStep("connect");
+                  setMission(null);
+                  setCompiled(null);
+                }}
+              >
                 Re-compile organization
               </button>
             </>
@@ -181,59 +228,72 @@ export default function App() {
         </section>
 
         <section className="panel output-panel">
-          {!active && (
+          {compiling && <CompileProgress sources={sources} active={compiling} />}
+
+          {missioning && <MissionProgress active={missioning} />}
+
+          {!active && !loading && (
             <div className="empty-state">
+              <OrgHealth confidence={0} coverage={0} status="Awaiting sources" />
               <h2>Organization Compiler</h2>
               <p>Connect sources, compile your genome, then run missions.</p>
-              <div className="pipeline-hero muted">
-                <PipelineTrace pipeline={{ evidence_count: 0, facts_count: 0, claims_count: 0 }} />
-              </div>
+              <PipelineTrace
+                pipeline={{ evidence_count: 0, facts_count: 0, claims_count: 0 }}
+                hero
+                activeStage={-1}
+              />
             </div>
           )}
 
-          {active && (
-            <>
-              <PipelineTrace pipeline={pipeline} hero />
+          {active && !compiling && !missioning && showResults && (
+            <div className="results-reveal">
+              <PipelineTrace pipeline={pipeline} hero activeStage={pipelineStage} />
 
-              {coverage && (
-                <div className="coverage-block">
-                  <div className="coverage-header">
-                    <div>
-                      <span className="coverage-label">Genome Confidence</span>
-                      <span className="coverage-value">{Math.round((genome?.confidence || 0) * 100)}%</span>
+              {coverage && genome && (
+                <div className="health-row">
+                  <OrgHealth
+                    confidence={genome.confidence}
+                    coverage={coverage.coverage_percent}
+                    status={mission?.status || "Genome compiled"}
+                  />
+                  <div className="coverage-block compact">
+                    <div className="coverage-header">
+                      <div>
+                        <span className="coverage-label">Genome Confidence</span>
+                        <span className="coverage-value">{Math.round(genome.confidence * 100)}%</span>
+                      </div>
                     </div>
-                    <span className="coverage-pct">{coverage.coverage_percent}% source coverage</span>
+                    <p className="coverage-hint">{coverage.hint}</p>
+                    <ul className="coverage-list">
+                      {coverage.items.map((item) => (
+                        <li key={item.id} className={item.connected ? "on" : item.available ? "off" : "soon"}>
+                          <span>{item.label}</span>
+                          <span>{item.connected ? "✓" : item.available ? "✗" : "—"}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <p className="coverage-hint">{coverage.hint}</p>
-                  <ul className="coverage-list">
-                    {coverage.items.map((item) => (
-                      <li key={item.id} className={item.connected ? "on" : item.available ? "off" : "soon"}>
-                        <span>{item.label}</span>
-                        <span>{item.connected ? "✓" : item.available ? "✗" : "—"}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               )}
 
+              <EvidenceGraph evidence={compiled?.evidence} animate={showResults} />
+
               {genome && (
                 <Card title="Organization Genome">
-                  <dl className="genome-grid">
-                    <dt>Identity</dt><dd>{genome.identity}</dd>
-                    <dt>Voice</dt><dd>{genome.voice}</dd>
-                    <dt>Audience</dt><dd>{genome.audience}</dd>
-                    <dt>Channels</dt><dd>{genome.channels?.join(", ")}</dd>
-                  </dl>
+                  <GenomeViz genome={genome} animate={pipelineStage >= 4} />
                 </Card>
               )}
 
               {mission?.workforce && (
                 <Card title="Workforce">
                   <ul className="workforce-list">
-                    {mission.workforce.roles.map((r) => (
-                      <li key={r.name}>
+                    {mission.workforce.roles.map((r, i) => (
+                      <li key={r.name} className="fade-up" style={{ animationDelay: `${i * 80}ms` }}>
                         <span>{r.name}</span>
-                        <span className={`status ${r.status}`}>{r.status}</span>
+                        <span className={`status ${r.status}`}>
+                          {r.status === "active" && <span className="presence-dot" />}
+                          {r.status}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -241,16 +301,16 @@ export default function App() {
               )}
 
               {mission?.board_decision && (
-                <Card title="Board Decision">
+                <Card title="Board Meeting">
+                  <BoardMeeting decision={mission.board_decision} animate />
                   <button
                     className="board-toggle"
                     onClick={() => setExpandedBoard(!expandedBoard)}
                   >
-                    <span className="decision">{mission.board_decision.decision}</span>
-                    <span className="board-conf">{Math.round(mission.board_decision.confidence * 100)}% confidence</span>
+                    <span>{expandedBoard ? "Hide trace" : "Show decision trace"}</span>
                   </button>
                   {expandedBoard && (
-                    <div className="board-trace">
+                    <div className="board-trace fade-in">
                       <section>
                         <h4>Evidence</h4>
                         <ul>
@@ -267,16 +327,6 @@ export default function App() {
                           ))}
                         </ul>
                       </section>
-                      {mission.board_decision.policies?.length > 0 && (
-                        <section>
-                          <h4>Policies</h4>
-                          <ul>
-                            {mission.board_decision.policies.map((p, i) => (
-                              <li key={i}>{p}</li>
-                            ))}
-                          </ul>
-                        </section>
-                      )}
                     </div>
                   )}
                 </Card>
@@ -286,7 +336,11 @@ export default function App() {
                 <Card title="Mission Replay">
                   <ol className="replay-timeline">
                     {mission.replay.map((evt, i) => (
-                      <li key={i}>
+                      <li
+                        key={i}
+                        className="replay-item"
+                        style={{ animationDelay: `${i * 100}ms` }}
+                      >
                         <span className="replay-time">{formatTime(evt.time)}</span>
                         <div className="replay-body">
                           <strong>{evt.label}</strong>
@@ -297,7 +351,7 @@ export default function App() {
                   </ol>
                 </Card>
               )}
-            </>
+            </div>
           )}
         </section>
       </main>
@@ -314,28 +368,9 @@ function FlowStep({ n, label, active, done }) {
   );
 }
 
-function PipelineTrace({ pipeline, hero }) {
-  if (!pipeline) return null;
-  const cls = hero ? "pipeline-hero" : "pipeline";
-  return (
-    <div className={cls}>
-      <div className="pipeline-title">Compiler Pipeline</div>
-      <div className="pipeline-flow">
-        <span className="pipe-stage">Evidence <em>({pipeline.evidence_count})</em></span>
-        <span className="pipe-arrow">↓</span>
-        <span className="pipe-stage">Facts <em>({pipeline.facts_count})</em></span>
-        <span className="pipe-arrow">↓</span>
-        <span className="pipe-stage">Claims <em>({pipeline.claims_count})</em></span>
-        <span className="pipe-arrow">↓</span>
-        <span className="pipe-stage genome-stage">Genome</span>
-      </div>
-    </div>
-  );
-}
-
 function Card({ title, children }) {
   return (
-    <div className="card">
+    <div className="card fade-up">
       <h3>{title}</h3>
       {children}
     </div>
