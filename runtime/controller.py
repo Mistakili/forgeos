@@ -97,9 +97,20 @@ class ForgeController:
         )
 
         radar = build_department_radar(sources, compiled)
-        insights = await build_insights(
-            compiled, coverage, radar, self.reasoning
-        )
+        try:
+            insights = await build_insights(
+                compiled, coverage, radar, self.reasoning
+            )
+        except Exception:
+            from runtime.insights import _insights_from_evidence
+
+            insights = _insights_from_evidence(
+                compiled["genome"],
+                compiled["facts"],
+                compiled["evidence"],
+                coverage,
+                radar,
+            )
 
         result = {
             "session_id": session_id,
@@ -107,7 +118,7 @@ class ForgeController:
             "sources": sources,
             "coverage": coverage,
             "radar": radar,
-            "insights": insights,
+            "insights": insights or [],
             "pipeline": {
                 "evidence_count": len(compiled["evidence"]),
                 "facts_count": len(compiled["facts"]),

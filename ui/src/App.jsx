@@ -196,7 +196,11 @@ export default function App() {
               active={railActive(item.id)}
               onClick={
                 item.id === "insights" && compiled
-                  ? () => setAct(compiled.insights ? "insights" : "ready")
+                  ? () => setAct("insights")
+                  : item.id === "deliberate" && compiled
+                  ? () => setAct("deliberate")
+                  : item.id === "execute" && mission
+                  ? () => setAct("execute")
                   : undefined
               }
             />
@@ -247,7 +251,7 @@ export default function App() {
 
           {act === "insights" && compiled && (
             <ActInsights
-              insights={compiled.insights}
+              compiled={compiled}
               onContinue={() => setAct("ready")}
             />
           )}
