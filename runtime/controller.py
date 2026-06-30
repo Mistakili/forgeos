@@ -14,6 +14,7 @@ from kernel.artifact_store import ArtifactStore
 from kernel.event_store import EventStore
 from reasoning.client import ReasoningClient
 from runtime.coverage import SOURCE_CATALOG, build_coverage
+from runtime.discovery_radar import build_department_radar
 from runtime.trace import build_board_trace, format_replay_timeline
 
 
@@ -99,6 +100,7 @@ class ForgeController:
             "compiled_at": datetime.now(timezone.utc).isoformat(),
             "sources": sources,
             "coverage": coverage,
+            "radar": build_department_radar(sources, compiled),
             "pipeline": {
                 "evidence_count": len(compiled["evidence"]),
                 "facts_count": len(compiled["facts"]),
